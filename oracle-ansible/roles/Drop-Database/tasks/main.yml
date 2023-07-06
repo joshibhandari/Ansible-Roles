@@ -1,0 +1,59 @@
+---
+  - name: Get Table list from database
+    shell:
+      cmd: |
+        sqlplus -S cxpsadm_joshi_48dev@db12c/c_xps1234 << EOF
+        SELECT table_name FROM user_tables ORDER BY table_name;
+        EOF
+    register: table_list
+    check_mode: false
+    changed_when: false
+
+  - name: Switch Database output
+    debug:
+      msg: "{{ table_list.stdout_lines|list }}"
+
+  - name: Dropping the tables
+    shell:
+      cmd: |
+        sqlplus -S cxpsadm_joshi_48dev@db12c/c_xps1234 << EOF
+        DROP TABLE "{{ item }}" PURGE;
+        EOF
+    register: table_list1
+    with_items: "{{ table_list.stdout_lines }}"
+    check_mode: false
+    changed_when: false
+
+  - name: Get view list from database
+    shell:
+      cmd: |
+        sqlplus -S cxpsadm_joshi_48dev@db12c/c_xps1234 << EOF
+        select view_name from sys.all_views where OWNER = 'cxpsadm_joshi_48dev';
+        EOF
+    register: view_list
+    check_mode: false
+    changed_when: false
+
+  - name: Switch view Database output
+    debug:
+      msg: "{{ view_list.stdout_lines|list }}"
+
+  - name: Dropping the views
+    shell:
+      cmd: |
+        sqlplus -S cxpsadm_joshi_48dev@db12c/c_xps1234 << EOF
+        DROP VIEW "{{ item }}";
+        EOF
+    register: views_list1
+    with_items: "{{ view_list.stdout_lines }}"
+    check_mode: false
+    changed_when: false
+
+  - name: Drop table Database output
+    debug:
+      msg: "{{ table_list1.results|list }}"
+
+  - name: Drop views Database output
+    debug:
+      msg: "{{ views_list1.results|list }}"
+

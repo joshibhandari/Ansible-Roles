@@ -1,0 +1,45 @@
+---
+  - name: delete old files
+    file:
+      path: '{{ item }}'
+      state: absent
+    with_items:
+      - /home/joshi/oracle-ansible/cc-platform-jdk11-20.07.16-SNAPSHOT-installer.bash
+      - /home/joshi/oracle-ansible/mysql-cc-script.sh
+
+  - name: Get running processes
+    ignore_errors: yes
+    shell: "ps -efw | grep oracle-cc | grep CC | awk '{print $2}'"
+    register: running_processes
+
+  - name: Get running tomcat processes
+    ignore_errors: yes
+    shell: "ps -efw | grep oracle-cc | grep tomcat | awk '{print $2}'"
+    register: running_processes1
+
+  - name: Kill running processes
+    ignore_errors: yes
+    shell: "kill -9 {{ item }}"
+    with_items:
+      - "{{ running_processes.stdout_lines }}"
+      - "{{ running_processes1.stdout_lines }}"
+
+  - name: Check if killed
+    wait_for:
+      path: "/proc/{{ item }}/status"
+      state: absent
+    with_items:
+      - "{{ running_processes.stdout_lines }}"
+      - "{{ running_processes1.stdout_lines }}"
+    ignore_errors: yes
+    register: killed_processes
+
+  - name: Force kill stuck processes
+    shell: "kill -9 {{ item }}"
+    with_items: "{{ killed_processes.results | select('failed') | map(attribute='item') | list }}"
+
+  - name: Recursively remove directory
+    file:
+      path: /home/joshi/oracle-ansible/oracle-cc
+      state: absent
+

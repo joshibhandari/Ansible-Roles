@@ -1,0 +1,30 @@
+---
+  - name: Download cc-platform-20.07.16.x-jdk11-installer.bash
+    get_url:
+      url: http://nexusrepo.customerxps.com/repository/package-images/modules/cc/jdk11-20.07.16-SNAPSHOT/cc-platform-jdk11-20.07.16-SNAPSHOT-installer.bash
+      dest: /home/joshi/oracle-ansible
+      mode: 0755
+
+  - name: update the config.
+    copy:
+      src: /home/joshi/oracle-cc-script.sh 
+      dest: /home/joshi/oracle-ansible
+      #owner: joshi
+      #group: joshi
+      mode: 0777
+
+  - name: Run a Deploy script
+    shell: /home/joshi/oracle-ansible/oracle-cc-script.sh
+    register: deploy
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+
+  - name: Deploy script output
+    debug:
+      msg: "{{ deploy.stdout_lines|list }}"
+
+  - name: start tomcat running
+    shell: /home/joshi/oracle-ansible/oracle-cc/scripts/startPlatform.sh
+    async: 80
+    poll: 5
+

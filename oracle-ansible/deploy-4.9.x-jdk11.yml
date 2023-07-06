@@ -1,0 +1,17 @@
+---
+  - hosts: node1
+    become: true
+    become_user: joshi
+    roles:
+      - { role: kill-process, tags: ["kill-process"] }
+
+  - hosts: localhost
+    roles:
+      - { role: Drop-Database, tags: ["Drop-Database"] }
+
+  - hosts: node1
+    become: true
+    become_user: joshi
+    roles:
+      - { role: node1-setup, tags: ["node1-setup"] }
+
